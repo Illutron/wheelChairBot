@@ -24,6 +24,7 @@ void setup()
 {
 
   String portName = Serial.list()[7]; 
+  println(Serial.list());
   et_begin(new Serial(this, portName, 115200));
   size(800, 600);
 }
@@ -43,7 +44,7 @@ void draw()
 void mouseMoved()
 {
   et_send(data);
-  data.value = (short)map((short)mouseX, 0, width, 0, 255);
+  data.value = (short)map((short)mouseX, 0, width, -20,20);
    println(data.value);
   data.param = 1;
 
