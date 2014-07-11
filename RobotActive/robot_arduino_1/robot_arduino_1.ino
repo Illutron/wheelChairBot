@@ -14,6 +14,9 @@
 #define STATE_SEARCHING_FOR_TARGET 0
 #define STATE_EMERGENCY_STOP 32
 
+int approachAfterTime = 80000
+int getBoredAfterTime = 120000
+
 void(* resetFunc) (void) = 0;//declare reset function at address 0
 
 //create object
@@ -44,6 +47,7 @@ int faceZ = 0;
 int faceCount = 0;
 int selectSound = 0;
 bool emergencyStopActive = false; 
+int stateTime = 0;
 
 int state = STATE_SEARCHING_FOR_TARGET;
 
@@ -129,6 +133,7 @@ void loop(){
       case P_STOP:
          if(mydata.value == 1) {
            state = STATE_EMERGENCY_STOP;
+           stateTime = 0;
          }
         break;
       case P_FACECOUNT:
@@ -141,6 +146,7 @@ void loop(){
   
   
   if(state == STATE_EMERGENCY_STOP) {
+     stateTime += 1;
      
      drive = 0;
      turn = 0;
@@ -148,6 +154,7 @@ void loop(){
      // stop all other actuators
      
   } else if (state == STATE_SEARCHING_FOR_TARGET) {
+    stateTime += 1;
     // control base around searching
     
     // turn head slightly periodically
@@ -155,21 +162,53 @@ void loop(){
     // be aware of virtual fence
     
   } else if (state == STATE_HAS_TARGET) {
+    stateTime += 1;
     // control actuators to point at target dont move base
     // scan target, curios 
     
-    if(faceX > 600) {
+    
+    bool inBullseye = true;
+    
+    if(faceX > 550) {
       // face is to to the right
+      inBullseye = false;
+    
+    } else if( faceX < 450) {
+      // face is to the left
+      inBullseye = false;
+    
+    } 
+    
+    
+    if(faceY > 550) {
+      // face is up
+       inBullseye = false;
       
     
-    } else if(faceX < 400) {
-      // face is to the 
-    
+    } else if(faceY < 450) {
+      // face is down
+       inBullseye = false;
     }
     
     
-    // after time - maybe approach target cautiusly
+    if(stateTime > approachAfterTime) {
+      // after time - maybe approach target cautiusly
+      
+      // if distance is  over threshold 
+          // approach
+      
+      
+    }
     
+    if(stateTime > getBoredAfterTime) {
+      
+      // turn head away see if there is someone new
+      
+      // drive off 
+      
+      // look up or down
+      
+    }
     
     
     // after more time - search for someone new
@@ -269,6 +308,12 @@ void loop(){
 }
 
 void faceFound(int _faceCount) {
+   if(faceCount = 0) {
+     // we were alone before
+     state = STATE_HAS_TARGET;
+     stateTime = 0;
+     
+   }
    faceCount = _faceCount;
 }
 
@@ -277,6 +322,9 @@ void faceLost(int _faceCount) {
    
    if(faceCount == 0) {
      // ahh we lost all our friends sound
+     state = STATE_SEARCHING_FOR_TARGET;
+     stateTime = 0;
+     
    } else {
      // someone left but there is still people
    }
