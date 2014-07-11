@@ -35,7 +35,7 @@ void loop(){
     mydata.param = 2;
     mydata.value = (value ++ ) % 250;
     ET.sendData();
-    time = millis()+30;
+    time = millis()+25;
     
    /* if(mydata.param ==1) // robot speed
     {

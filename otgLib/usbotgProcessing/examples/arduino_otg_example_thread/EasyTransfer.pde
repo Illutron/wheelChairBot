@@ -80,7 +80,7 @@ boolean et_receive()
   }
 
   //we get here if we already found the header bytes, the struct size matched what we know, and now we are byte aligned.
-  if (rx_len != 0) {
+  if (rx_len != 0 && usb_avaliable() > rx_len ) {
     // debug("we are in sync");
     while (rx_array_inx <= rx_len) {
       rx_buffer[rx_array_inx++] = (byte)usb_read_wait();

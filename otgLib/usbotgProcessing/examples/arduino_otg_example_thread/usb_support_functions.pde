@@ -25,51 +25,55 @@ UsbSerialPort port;
 //int bytes_in_buffer_pointer = 0;
 //int buffer_pointer = 0;
 //byte buffer[] = new byte[1000];
-byte tmpBuffer[] = new byte[10000];
+byte tmpBuffer[] = new byte[1000];
 int bytes_in_tmpBuffer = 0;
 
 import java.util.LinkedList;
 import java.util.Queue;
 Queue<Byte> buffer = new LinkedList<Byte>();
+Thread thread;
 
 
 void usb_start_thread() {
-  new Thread(new Runnable() {
-    public void run() {
-      try {
+  Runnable runnable = new Runnable() {
+    @Override
+      public void run() {
+      while (true)
+      {
+        //  Log.v("illutron", "data");
+        try {
 
-        bytes_in_tmpBuffer = port.read(tmpBuffer, 200);
+          bytes_in_tmpBuffer = port.read(tmpBuffer, 2);
 
-        for (int i = 0; i < bytes_in_tmpBuffer; i++)
-        {
-          buffer.add(tmpBuffer[i]);
+          for (int i = 0; i < bytes_in_tmpBuffer; i++)
+          {
+            buffer.add(tmpBuffer[i]);
+          }
         }
-
-      } 
-      catch (IOException e) {
-
-        usb_found = false;
-      } 
-      finally {
+        catch (IOException e) {
+          Log.v("illutron", "stop");
+          usb_found = false;
+          break;
+        } 
+        finally {
+        }
       }
     }
-  }
-  ).start();
+  };
+  Thread thread = new Thread(runnable);
+  thread.start();
 }
 
 int usb_avaliable()
 {
-
-
   if (!usb_found) 
   {
     usb_connect();
   }
   if (usb_found) 
   {
-   
-      return buffer.size();
-  
+
+    return buffer.size();
   }
 
   return 0;
@@ -87,8 +91,20 @@ byte usb_read()
 {
   if (buffer.size() > 0)
   {
-
-    return buffer.remove();
+    try {
+      byte tmpValue = buffer.remove();
+      if (buffer.size()> 10000)
+      {
+        buffer.clear();
+        Log.v("illutron", "cleared buffer - to much data");
+      }
+      return tmpValue;
+    }
+    catch(Exception e)
+    {
+      Log.v("illutron", "Buffer erro!:" + buffer.size());
+      return 0;
+    }
   } else
   {
 
@@ -100,8 +116,14 @@ byte usb_read()
 void usb_write(byte[] data)
 {
   try {
-
-    port.write(data, 10);
+    if (!usb_found) 
+    {
+      usb_connect();
+    }
+    if (usb_found) 
+    {
+      port.write(data, 10);
+    }
   } 
   catch (IOException e) {
   }
@@ -119,7 +141,7 @@ void usb_connect()
 {
 
   if (!usb_found) {
-    
+
     // Find all available drivers from attached devices.
     manager = (UsbManager) getSystemService(this.USB_SERVICE);
     availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
@@ -142,13 +164,14 @@ void usb_connect()
           port.open(connection);
           port.setParameters(115200, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
           usb_found= true;
+          usb_start_thread();
+          Log.v("illutron", "start thread");
         }
         catch (IOException e) {
           println("Could not connect");
         }
       }
     }
-    usb_start_thread();
   }
 }
 

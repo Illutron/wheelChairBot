@@ -16,13 +16,13 @@ void draw()
     background(0);
   }
 
-  //  background(data.value,0,0);
+  background(0,0,0);
+  text(buffer.size(), 200,300);
   text(data.value, 200, 200);
 
-  text(data.param, 200, 1000);
   // Easytransfer
 
-  if (et_receive())
+  while (et_receive())
   {
     data.param=1;
 
