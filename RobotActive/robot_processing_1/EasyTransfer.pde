@@ -68,11 +68,11 @@ boolean et_receive()
       if ((byte)usb_read_wait() == -123) {
 
         rx_len = (byte)usb_read_wait();
-        debug("len=" +rx_len);
+       // debug("len=" +rx_len);
         //make sure the binary structs on both Arduinos are the same size.
         if (rx_len != size) {
           rx_len = 0;
-          debug("notsame size");
+        //  debug("notsame size");
           return false;
         }
       }
@@ -131,7 +131,7 @@ boolean et_receive()
 
 
 void et_send(DATA_STRUCTURE _data) {
-
+ 
   try {
     // Pack the class as a byte buffer
 
