@@ -14,8 +14,8 @@
 #define STATE_SEARCHING_FOR_TARGET 0
 #define STATE_EMERGENCY_STOP 32
 
-int approachAfterTime = 80000
-int getBoredAfterTime = 120000
+int approachAfterTime = 80000;
+int getBoredAfterTime = 120000;
 
 void(* resetFunc) (void) = 0;//declare reset function at address 0
 
@@ -62,6 +62,7 @@ unsigned long timer1 = 0;
 unsigned char data[255];
 unsigned char cphase = 0;
 unsigned int control = 0b0000010000000000;//0x0400 bit need to be set for drive relay other bits control actuators and lights
+// todo other bits for actuators
 unsigned char cptr = 0;
 
 int drive = 0;
@@ -79,8 +80,6 @@ int cornerFrontLeftHeat;
 int cornerFrontRightHeat;
 int cornerRearLeftHeat;
 int cornerRearRightHeat;
-
-
 
 void setup(){
   
@@ -137,13 +136,16 @@ void loop(){
          }
         break;
       case P_FACECOUNT:
-        faceCount = mydata.value;
+      
+        if(mydata.value > faceCount) faceFound(mydata.value);
+        
+        if(mydata.value < faceCount) faceLost(mydata.value);  
+        
         break;
       case P_DEBUG_PARAM:
         break;
     }
   }
-  
   
   if(state == STATE_EMERGENCY_STOP) {
      stateTime += 1;
@@ -155,6 +157,13 @@ void loop(){
      
   } else if (state == STATE_SEARCHING_FOR_TARGET) {
     stateTime += 1;
+    
+    drive = 0;
+    turn = 0;
+    //turn += 10;
+    //if(turn>100) turn = 0;
+    
+    //drive = 30;
     // control base around searching
     
     // turn head slightly periodically
@@ -166,16 +175,19 @@ void loop(){
     // control actuators to point at target dont move base
     // scan target, curios 
     
+    drive = 20;
     
     bool inBullseye = true;
     
     if(faceX > 550) {
       // face is to to the right
       inBullseye = false;
+      turn = -40;
     
     } else if( faceX < 450) {
       // face is to the left
       inBullseye = false;
+      turn = 40;
     
     } 
     
@@ -183,7 +195,6 @@ void loop(){
     if(faceY > 550) {
       // face is up
        inBullseye = false;
-      
     
     } else if(faceY < 450) {
       // face is down
@@ -191,17 +202,25 @@ void loop(){
     }
     
     
+    
+    if(inBullseye) {
+    
+      turn = 0;
+      drive = 5;
+      
+    }
+    
+    
     if(stateTime > approachAfterTime) {
       // after time - maybe approach target cautiusly
-      
+      //drive = 80;
       // if distance is  over threshold 
           // approach
-      
       
     }
     
     if(stateTime > getBoredAfterTime) {
-      
+      //drive = 0;
       // turn head away see if there is someone new
       
       // drive off 
@@ -308,10 +327,11 @@ void loop(){
 }
 
 void faceFound(int _faceCount) {
-   if(faceCount = 0) {
+   if(faceCount == 0) {
      // we were alone before
      state = STATE_HAS_TARGET;
      stateTime = 0;
+     sendData(P_SOUND, 0);
      
    }
    faceCount = _faceCount;
