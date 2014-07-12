@@ -66,13 +66,8 @@ void usb_start_thread() {
 
 int usb_avaliable()
 {
-  if (!usb_found) 
+  if (usb_ready())
   {
-    usb_connect();
-  }
-  if (usb_found) 
-  {
-
     return buffer.size();
   }
 
@@ -89,7 +84,7 @@ byte usb_read_wait()
 }
 byte usb_read()
 {
-  if (buffer.size() > 0)
+  if (buffer.size() > 0 && usb_ready())
   {
     try {
       byte tmpValue = buffer.remove();
@@ -116,11 +111,7 @@ byte usb_read()
 void usb_write(byte[] data)
 {
   try {
-    if (!usb_found) 
-    {
-      usb_connect();
-    }
-    if (usb_found) 
+    if (usb_ready())
     {
       port.write(data, 10);
     }
@@ -130,14 +121,17 @@ void usb_write(byte[] data)
 }
 void usb_write(byte data)
 {
-  byte tmpBuffer[] = new byte[1];
-  tmpBuffer[0] = data;
-  usb_write(tmpBuffer);
+  if (usb_ready())
+  {
+    byte tmpBuffer[] = new byte[1];
+    tmpBuffer[0] = data;
+    usb_write(tmpBuffer);
+  }
 }
 
 
 
-void usb_connect()
+boolean usb_ready()
 {
 
   if (!usb_found) {
@@ -153,8 +147,6 @@ void usb_connect()
       UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
       if (connection != null) {
 
-
-
         // Read some data! Most have just one port (port 0).
         ports = driver.getPorts();
         port = ports.get(0);
@@ -166,13 +158,19 @@ void usb_connect()
           usb_found= true;
           usb_start_thread();
           Log.v("illutron", "start thread");
+          return true;
         }
         catch (IOException e) {
           println("Could not connect");
         }
       }
     }
+  } else
+  {
+    return true;
   }
+  usb_found=false;
+  return usb_found;
 }
 
 void close()

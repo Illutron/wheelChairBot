@@ -37,32 +37,48 @@ void setup(){
 
 int value = 0;
 long time = 0;
+int numFaces = 0;
 
 void loop(){
   //this is how you access the variables. [name of the group].[variable name]
 
   if(time < millis())
   {
-    mydata.param = P_DEBUG_PARAM+4;
-    mydata.value = (value ++ ) % 250;
-    ET.sendData();
+    /* mydata.param = P_DEBUG_PARAM+5;
+     mydata.value = (value ++ ) % 250;*/
+
+
+    /*  mydata.param = P_DEBUG_CHAR;
+     mydata.param = (byte)'a';*/
+
     time = millis()+25;
-    
-  
   }
 
   //send the data
 
-
-    if(ET.receiveData()){
-    if(mydata.param==1)
+  if(ET.receiveData()){
+    if(mydata.param==P_FACECOUNT)
     {
-      analogWrite(11,mydata.value);
+      numFaces ==mydata.value;
+      mydata.param = P_DEBUG_PARAM + 5;
+      mydata.value = mydata.value;
+      ET.sendData();
     }
+    if(mydata.param==P_FACEX)
+    {
+      if(numFaces > 0)
+      {
+        analogWrite(11,mydata.value/4);
+      }
+
+    }
+
   }
 
 
 
 
 }
+
+
 

@@ -8,6 +8,7 @@ void setup()
   cam_setup();
   sampler_begin();
 
+  
   textSize(40);
 }
 
@@ -18,11 +19,19 @@ void draw()
   com_statemachine();
 
   // DRAW
-  background(100);
+  background(30);
 
-  debug_set_value(0, (int)millis());
-  debug_set_value(1, numFaces);
+
   cam_update();
+
+  // Mads debug
+  debug_set_value(0, (int)millis());
+  debug_set_value(1, round(numFaces*100));
+  debug_set_value(2, camNorm(largestFace));
+  debug_set_value(3, buffer.size());
+  
+  // end debug
+
   debug_draw(displayHeight/2, displayHeight/2+20);
 
   // Hearbeat
@@ -63,18 +72,4 @@ long myMillis()
 }
 
 
-// Easytransfer
-/*
-  while (et_receive ())
- {
- data.param=1;
- 
- et_send(data);
- 
- 
- 
- noStroke();
- 
- ellipse(((pos++))%displayWidth, data.value+500, 2, 2);
- }
- */
+
