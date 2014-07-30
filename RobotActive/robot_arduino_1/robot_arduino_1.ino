@@ -10,12 +10,22 @@
 #define P_DEBUG_CHAR 8
 #define P_DEBUG_PARAM 9 
 
+#define SOUND_GOODBYE 0
+#define SOUND_SING 1
+#define SOUND_HELLO 2
+
+#define STATE_EMERGENCY_STOP 0
 #define STATE_HAS_TARGET 1
-#define STATE_SEARCHING_FOR_TARGET 0
-#define STATE_EMERGENCY_STOP 32
+#define STATE_SEARCHING_FOR_TARGET 2
+
+#define MOOD_STATE_CURIOUS 1 // asking questions, seeking out people
+#define MOOD_STATE_TIRED 2 // staying away not saying much, heavy breathing
+#define MOOD_STATE_CONFUSED 3 // move around a lot ask confused questions
+#define MOOD_STATE_EXCITED 4 // greet people a lot HI HI HI - approach move jiggle 
 
 int approachAfterTime = 80000;
 int getBoredAfterTime = 120000;
+int moodShiftAfterTime = 140000;
 
 void(* resetFunc) (void) = 0;//declare reset function at address 0
 
@@ -48,7 +58,9 @@ int faceCount = 0;
 int selectSound = 0;
 bool emergencyStopActive = false; 
 int stateTime = 0;
+int moodStateTime = 0;
 
+int moodState = MOOD_STATE_CURIOUS;
 int state = STATE_SEARCHING_FOR_TARGET;
 
 long time = 0;
@@ -108,9 +120,9 @@ void setup(){
 
 
 void loop(){
-
+  stateTime += 1;
+  moodStateTime += 1;
   analogWrite(13, statusLed);
-  
   
   if(ET.receiveData()){
     
@@ -136,7 +148,7 @@ void loop(){
          }
         break;
       case P_FACECOUNT:
-      
+        
         if(mydata.value > faceCount) faceFound(mydata.value);
         
         if(mydata.value < faceCount) faceLost(mydata.value);  
@@ -147,17 +159,21 @@ void loop(){
     }
   }
   
+  // Shift mode after set time and only if we are alone
+  if(moodStateTime > moodShiftAfterTime && STATE_SEARCHING_FOR_TARGET) {
+    moodStateTime = 0;
+    
+    moodState = int(random(4));
+    
+  }
+  
   if(state == STATE_EMERGENCY_STOP) {
-     stateTime += 1;
-     
      drive = 0;
      turn = 0;
      
      // stop all other actuators
      
-  } else if (state == STATE_SEARCHING_FOR_TARGET) {
-    stateTime += 1;
-    
+  } else if (state == STATE_SEARCHING_FOR_TARGET) {    
     drive = 0;
     turn = 0;
     //turn += 10;
@@ -171,7 +187,6 @@ void loop(){
     // be aware of virtual fence
     
   } else if (state == STATE_HAS_TARGET) {
-    stateTime += 1;
     // control actuators to point at target dont move base
     // scan target, curios 
     
@@ -188,9 +203,7 @@ void loop(){
       // face is to the left
       inBullseye = false;
       turn = 40;
-    
-    } 
-    
+    }
     
     if(faceY > 550) {
       // face is up
@@ -202,9 +215,7 @@ void loop(){
     }
     
     
-    
     if(inBullseye) {
-    
       turn = 0;
       drive = 5;
       
@@ -230,11 +241,9 @@ void loop(){
     }
     
     
-    // after more time - search for someone new
-    
+    // after more time - search for someone new 
     
   }
-  
   
   //***********************************************************
   //  Generate and send drive data packet
