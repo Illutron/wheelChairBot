@@ -18,13 +18,13 @@
 #define STATE_HAS_TARGET 1
 #define STATE_SEARCHING_FOR_TARGET 2
 
-#define MOOD_STATE_CURIOUS 1 // asking questions, seeking out people
-#define MOOD_STATE_TIRED 2 // staying away not saying much, heavy breathing
-#define MOOD_STATE_CONFUSED 3 // move around a lot ask confused questions
-#define MOOD_STATE_EXCITED 4 // greet people a lot HI HI HI - approach move jiggle 
+#define MOOD_STATE_CURIOUS 1   // asking questions, seeking out people
+#define MOOD_STATE_TIRED 2     // staying away not saying much, heavy breathing
+#define MOOD_STATE_CONFUSED 3  // move around a lot ask confused questions
+#define MOOD_STATE_EXCITED 4   // greet people a lot HI HI HI - approach move jiggle 
 
-int approachAfterTime = 80000;
-int getBoredAfterTime = 120000;
+int approachAfterTime  = 80000;
+int getBoredAfterTime  = 120000;
 int moodShiftAfterTime = 140000;
 
 void(* resetFunc) (void) = 0;//declare reset function at address 0
@@ -60,6 +60,26 @@ bool emergencyStopActive = false;
 int stateTime = 0;
 int moodStateTime = 0;
 
+unsigned long driveTime = 0;
+
+unsigned long headTiltTime  = 0;
+unsigned long baseTiltTime  = 0;
+unsigned long baseLevelTime = 0;
+
+unsigned long headTurnTime = 0;
+
+int headTiltDriveTime  = 2000;
+int baseLevelDriveTime = 2000;
+int baseTiltDriveTime  = 2000;
+
+int headTurnDriveTime  = 2000;
+
+int headTiltIdleTime   = 4000;
+int baseLevelIdleTime  = 4000;
+int baseTiltIdleTime  = 4000;
+
+int headTurnIdleTime   = 4000;
+
 int moodState = MOOD_STATE_CURIOUS;
 int state = STATE_SEARCHING_FOR_TARGET;
 
@@ -81,13 +101,14 @@ unsigned char cptr = 0;
 int drive = 0;
 int turn = 0;
 
-int headTurn = 0; // 0 off, 1 and 2 are directions
-int headTitlt = 0; // 0 off, 1 and 2 are directions
+int headTurn  = 0; // 0 off, 1 and 2 are directions
+int headTilt  = 0;
+int baseLevel = 0;
+int baseTilt = 0;
 
 bool lightsOn = false;
 
 // we have a few different actuators too
-
 bool bound = false;
 
 /*float robotSpeedX = 0;
@@ -130,6 +151,7 @@ void loop(){
   
   stateTime += 1;
   moodStateTime += 1;
+  
   analogWrite(13, statusLed);
   
   if(ET.receiveData()){
@@ -178,12 +200,65 @@ void loop(){
   if(state == STATE_EMERGENCY_STOP) {
      drive = 0;
      turn = 0;
-     
+     headTilt = 0;
+     headTurn = 0;
      // stop all other actuators
      
   } else if (state == STATE_SEARCHING_FOR_TARGET) {    
+    
     drive = 0;
-    turn = 0;
+    turn  = 0;
+    
+    if(millis() - headTiltTime > headTiltIdleTime && headTilt == 0) { // move head after 4 seconds not moving head
+      headTilt = random(1,3);
+      headTiltTime = millis();
+      headTiltDriveTime = random(100,2000);
+    }
+    
+    if(millis() - headTiltTime > headTiltDriveTime && headTilt != 0) {
+      headTilt = 0;
+      headTiltTime = millis();
+      headTiltIdleTime = random(100,20000);
+    }
+    
+    /*
+    if(millis() - headTurnTime > headTurnIdleTime && headTurn == 0) { // move head after 4 seconds not moving head
+      headTurn = random(1,3);
+      headTurnTime = millis();
+      headTurnDriveTime = random(1000,40000);
+    }
+    
+    if(millis() - headTurnTime > headTurnDriveTime && headTurn != 0) {
+      headTurn = 0;
+      headTurnTime = millis();
+      headTurnIdleTime = random(100,10000);
+    }
+    */
+    
+    if(millis() - baseTiltTime > baseTiltIdleTime && baseTilt == 0) { // move head after 4 seconds not moving head
+      baseTilt = random(1,3);
+      baseTiltTime = millis();
+      baseTiltDriveTime = random(100,2000);
+    }
+    
+    if(millis() - baseTiltTime > baseTiltDriveTime && baseTilt != 0) {
+      baseTilt = 0;
+      baseTiltTime = millis();
+      baseTiltIdleTime = random(100,20000);
+    }
+    
+    if(millis() - baseLevelTime > baseLevelIdleTime && baseLevel == 0) { // move head after 4 seconds not moving head
+      baseLevel = random(1,3);
+      baseLevelTime = millis();
+      baseLevelDriveTime = random(100,2000);
+    }
+    
+    if(millis() - baseLevelTime > baseLevelDriveTime && baseLevel != 0) {
+      baseLevel = 0;
+      baseLevelTime = millis();
+      baseLevelIdleTime = random(100,20000);
+    }   
+    
     
     // chooses direction, set timestamp
     
@@ -235,7 +310,6 @@ void loop(){
       //drive = 80;
       // if distance is  over threshold 
           // approach
-      
     }
     
     if(stateTime > getBoredAfterTime) {
@@ -248,9 +322,7 @@ void loop(){
       
     }
     
-    
     // after more time - search for someone new 
-    
   }
   
   //***********************************************************
@@ -291,9 +363,9 @@ void loop(){
   
   if (cphase == 4) {
     
-    if(headTurn == 1) {
+    if(baseLevel == 1) {
        control|=0b0000000000001000;
-    } else if(headTurn == 2)
+    } else if(baseLevel == 2) {
        control|=0b0000000000000100;
     } else {
        control&=0b1111111111110011;
@@ -301,10 +373,19 @@ void loop(){
     
     if(headTilt == 1) {
        control|=0b0000000000000010;
-    } else if(headTilt == 2)
+    } else if(headTilt == 2) {
        control|=0b0000000000000001;
     } else {
        control&=0b1111111111111100;
+    }
+    
+    
+    if(baseTilt == 1) {
+       control|=0b0000000010000000;
+    } else if(baseTilt == 2) {
+       control|=0b0000000001000000;
+    } else {
+       control&=0b1111111100111111;
     }
 
          /* if(p[1]>138)
@@ -313,7 +394,6 @@ void loop(){
             control|=0b0000000001000000;
           else
             control&=0b1111111100111111;
-
 
           if(p[0]>128)
           {
@@ -326,9 +406,7 @@ void loop(){
           else
           {
             control&=0b0011011111111111;
-          }*/
-          
-          
+          }*/         
   }
   
   
