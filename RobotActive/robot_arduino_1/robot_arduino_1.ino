@@ -13,15 +13,17 @@
 #define SOUND_GOODBYE 0
 #define SOUND_SING 1
 #define SOUND_HELLO 2
+//todo add more sound
 
 #define STATE_EMERGENCY_STOP 0
 #define STATE_HAS_TARGET 1
 #define STATE_SEARCHING_FOR_TARGET 2
 
-#define MOOD_STATE_CURIOUS 1   // asking questions, seeking out people
-#define MOOD_STATE_TIRED 2     // staying away not saying much, heavy breathing
-#define MOOD_STATE_CONFUSED 3  // move around a lot ask confused questions
-#define MOOD_STATE_EXCITED 4   // greet people a lot HI HI HI - approach move jiggle 
+#define MOOD_NUM 4 //how many moods are there
+#define MOOD_STATE_CURIOUS 0   // asking questions, seeking out people
+#define MOOD_STATE_TIRED 1     // staying away not saying much, heavy breathing
+#define MOOD_STATE_CONFUSED 2  // move around a lot ask confused questions
+#define MOOD_STATE_EXCITED 3   // greet people a lot HI HI HI - approach move jiggle 
 
 int approachAfterTime  = 80000;
 int getBoredAfterTime  = 120000;
@@ -65,7 +67,6 @@ unsigned long driveTime = 0;
 unsigned long headTiltTime  = 0;
 unsigned long baseTiltTime  = 0;
 unsigned long baseLevelTime = 0;
-
 unsigned long headTurnTime = 0;
 
 int headTiltDriveTime  = 2000;
@@ -97,10 +98,8 @@ unsigned int control = 0b0000010000000000;//0x0400 bit need to be set for drive 
 // todo other bits for actuators
 
 unsigned char cptr = 0;
-
-int drive = 0;
-int turn = 0;
-
+int drive = 0; // -100 to 100
+int turn = 0;  // -100 to 100
 int headTurn  = 0; // 0 off, 1 and 2 are directions
 int headTilt  = 0;
 int baseLevel = 0;
@@ -193,15 +192,17 @@ void loop(){
   if(moodStateTime > moodShiftAfterTime && STATE_SEARCHING_FOR_TARGET) {
     moodStateTime = 0;
     
-    moodState = int(random(4));
+    moodState = int(random(MOOD_NUM));
     
   }
   
   if(state == STATE_EMERGENCY_STOP) {
-     drive = 0;
-     turn = 0;
-     headTilt = 0;
-     headTurn = 0;
+     drive = 0; 
+     turn = 0; 
+     headTurn  = 0;
+     headTilt  = 0;
+     baseLevel = 0;
+     baseTilt = 0;
      // stop all other actuators
      
   } else if (state == STATE_SEARCHING_FOR_TARGET) {    
@@ -221,7 +222,7 @@ void loop(){
       headTiltIdleTime = random(100,20000);
     }
     
-    /*
+    
     if(millis() - headTurnTime > headTurnIdleTime && headTurn == 0) { // move head after 4 seconds not moving head
       headTurn = random(1,3);
       headTurnTime = millis();
@@ -233,7 +234,7 @@ void loop(){
       headTurnTime = millis();
       headTurnIdleTime = random(100,10000);
     }
-    */
+    
     
     if(millis() - baseTiltTime > baseTiltIdleTime && baseTilt == 0) { // move head after 4 seconds not moving head
       baseTilt = random(1,3);
@@ -282,6 +283,8 @@ void loop(){
       // face is to to the right
       inBullseye = false;
       turn = -40;
+      
+      
     
     } else if( faceX < 450) {
       // face is to the left
@@ -320,9 +323,12 @@ void loop(){
       
       // look up or down
       
+      // after more time go away - search for someone new 
+          
+
+      
     }
     
-    // after more time - search for someone new 
   }
   
   //***********************************************************
@@ -388,13 +394,7 @@ void loop(){
        control&=0b1111111100111111;
     }
 
-         /* if(p[1]>138)
-            control|=0b0000000010000000;
-          else if(p[1]<108)
-            control|=0b0000000001000000;
-          else
-            control&=0b1111111100111111;
-
+         /* Last actuator, light probably?
           if(p[0]>128)
           {
             control|=0b1100000000000000;
@@ -457,6 +457,9 @@ void loop(){
       break;
     }
   }
+  
+  //todo send headTurn command 
+  
   
   if(time < millis())
   {
