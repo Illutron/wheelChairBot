@@ -33,7 +33,6 @@ unsigned char cphase = 0;
 unsigned int control = 0b0000010000000000;//0x0400 bit need to be set for drive relay other bits control actuators and lights
 unsigned char cptr = 0;
 
-
 int drive = 0;
 int turn = 0;
 

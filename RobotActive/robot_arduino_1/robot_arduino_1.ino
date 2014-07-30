@@ -75,10 +75,17 @@ unsigned char data[255];
 unsigned char cphase = 0;
 unsigned int control = 0b0000010000000000;//0x0400 bit need to be set for drive relay other bits control actuators and lights
 // todo other bits for actuators
+
 unsigned char cptr = 0;
 
 int drive = 0;
 int turn = 0;
+
+int headTurn = 0; // 0 off, 1 and 2 are directions
+int headTitlt = 0; // 0 off, 1 and 2 are directions
+
+bool lightsOn = false;
+
 // we have a few different actuators too
 
 bool bound = false;
@@ -120,6 +127,7 @@ void setup(){
 
 
 void loop(){
+  
   stateTime += 1;
   moodStateTime += 1;
   analogWrite(13, statusLed);
@@ -176,15 +184,16 @@ void loop(){
   } else if (state == STATE_SEARCHING_FOR_TARGET) {    
     drive = 0;
     turn = 0;
-    //turn += 10;
-    //if(turn>100) turn = 0;
     
-    //drive = 30;
-    // control base around searching
+    // chooses direction, set timestamp
     
-    // turn head slightly periodically
+    // drive until virtualfence or timediff
+      // then turn and repeat
+      
+    // turn head periodically
     
-    // be aware of virtual fence
+    // play sounds periodically
+    
     
   } else if (state == STATE_HAS_TARGET) {
     // control actuators to point at target dont move base
@@ -220,7 +229,6 @@ void loop(){
       drive = 5;
       
     }
-    
     
     if(stateTime > approachAfterTime) {
       // after time - maybe approach target cautiusly
@@ -279,6 +287,52 @@ void loop(){
     timer1 = micros() + 100;                                   //-Start sending actuator packet
     cphase = 0;                                                //
   }
+  
+  
+  if (cphase == 4) {
+    
+    if(headTurn == 1) {
+       control|=0b0000000000001000;
+    } else if(headTurn == 2)
+       control|=0b0000000000000100;
+    } else {
+       control&=0b1111111111110011;
+    }
+    
+    if(headTilt == 1) {
+       control|=0b0000000000000010;
+    } else if(headTilt == 2)
+       control|=0b0000000000000001;
+    } else {
+       control&=0b1111111111111100;
+    }
+
+         /* if(p[1]>138)
+            control|=0b0000000010000000;
+          else if(p[1]<108)
+            control|=0b0000000001000000;
+          else
+            control&=0b1111111100111111;
+
+
+          if(p[0]>128)
+          {
+            control|=0b1100000000000000;
+          }
+          else if(p[0]<108)
+          {
+            control|=0b0000100000000000;
+          }
+          else
+          {
+            control&=0b0011011111111111;
+          }*/
+          
+          
+  }
+  
+  
+  
   
   //***********************************************************
   //  Generate actuator packet (wierd interface)
