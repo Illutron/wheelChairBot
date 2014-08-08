@@ -38,6 +38,7 @@ void setup(){
 int value = 0;
 long time = 0;
 int numFaces = 0;
+int testCounr = 0;
 
 void loop(){
   //this is how you access the variables. [name of the group].[variable name]
@@ -60,9 +61,19 @@ void loop(){
     if(mydata.param==P_FACECOUNT)
     {
       numFaces ==mydata.value;
-      mydata.param = P_DEBUG_PARAM + 5;
-      mydata.value = mydata.value;
+
+
+
+   mydata.param = P_DEBUG_PARAM + 5;
+      mydata.value = testCounr++;
       ET.sendData();
+
+
+      mydata.param = P_SOUND;
+      mydata.value =2;
+      ET.sendData();
+
+   
     }
     if(mydata.param==P_FACEX)
     {
@@ -79,6 +90,7 @@ void loop(){
 
 
 }
+
 
 
 
